@@ -32,6 +32,8 @@ class YouTubeExtractor:
             'nocheckcertificate': True,
             'default_search': 'ytsearch',
             'socket_timeout': 30,
+            'ssl_verify': False,
+            'no_ssl_verify': True,
         }
 
         if proxy:
