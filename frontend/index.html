@@ -1,0 +1,795 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>YouTube Music API - Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        body { font-family: 'Inter', sans-serif; }
+        .gradient-bg { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+        .card-hover { transition: all 0.3s ease; }
+        .card-hover:hover { transform: translateY(-5px); box-shadow: 0 20px 40px rgba(0,0,0,0.1); }
+        .code-block { background: #1e1e1e; color: #d4d4d4; }
+        .endpoint-card { border-left: 4px solid #667eea; }
+        pre { white-space: pre-wrap; word-wrap: break-word; }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <!-- Navigation -->
+    <nav class="gradient-bg text-white shadow-lg sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <div class="flex items-center">
+                    <i class="fas fa-music text-2xl mr-3"></i>
+                    <span class="font-bold text-xl">YouTube Music API</span>
+                </div>
+                <div class="hidden md:flex space-x-8">
+                    <a href="#dashboard" class="hover:text-purple-200 transition">Dashboard</a>
+                    <a href="#endpoints" class="hover:text-purple-200 transition">API Endpoints</a>
+                    <a href="#examples" class="hover:text-purple-200 transition">Examples</a>
+                    <a href="#pricing" class="hover:text-purple-200 transition">Pricing</a>
+                    <a href="#docs" class="hover:text-purple-200 transition">Documentation</a>
+                </div>
+                <button id="mobileMenuBtn" class="md:hidden">
+                    <i class="fas fa-bars text-xl"></i>
+                </button>
+            </div>
+        </div>
+        <!-- Mobile Menu -->
+        <div id="mobileMenu" class="hidden md:hidden px-4 pb-4">
+            <a href="#dashboard" class="block py-2 hover:text-purple-200">Dashboard</a>
+            <a href="#endpoints" class="block py-2 hover:text-purple-200">API Endpoints</a>
+            <a href="#examples" class="block py-2 hover:text-purple-200">Examples</a>
+            <a href="#pricing" class="block py-2 hover:text-purple-200">Pricing</a>
+            <a href="#docs" class="block py-2 hover:text-purple-200">Documentation</a>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="gradient-bg text-white py-20">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+            <h1 class="text-4xl md:text-6xl font-bold mb-6">Production-Ready YouTube Music API</h1>
+            <p class="text-xl md:text-2xl mb-8 opacity-90">Optimized for Telegram Music Bots with High Reliability</p>
+            <div class="flex flex-col sm:flex-row gap-4 justify-center">
+                <a href="#endpoints" class="bg-white text-purple-600 px-8 py-3 rounded-lg font-semibold hover:bg-purple-100 transition">
+                    View API Endpoints
+                </a>
+                <a href="#examples" class="border-2 border-white px-8 py-3 rounded-lg font-semibold hover:bg-white hover:text-purple-600 transition">
+                    See Examples
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Dashboard Section -->
+    <section id="dashboard" class="py-16">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <h2 class="text-3xl font-bold text-gray-800 mb-8">API Dashboard</h2>
+            
+            <!-- Stats Cards -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
+                <div class="bg-white rounded-xl shadow-md p-6 card-hover">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-gray-500 text-sm">Total Requests</p>
+                            <p id="totalRequests" class="text-3xl font-bold text-gray-800">0</p>
+                        </div>
+                        <div class="bg-purple-100 p-3 rounded-full">
+                            <i class="fas fa-chart-line text-purple-600 text-xl"></i>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-white rounded-xl shadow-md p-6 card-hover">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-gray-500 text-sm">Success Rate</p>
+                            <p id="successRate" class="text-3xl font-bold text-green-600">0%</p>
+                        </div>
+                        <div class="bg-green-100 p-3 rounded-full">
+                            <i class="fas fa-check-circle text-green-600 text-xl"></i>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-white rounded-xl shadow-md p-6 card-hover">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-gray-500 text-sm">Cache Hit Rate</p>
+                            <p id="cacheHitRate" class="text-3xl font-bold text-blue-600">0%</p>
+                        </div>
+                        <div class="bg-blue-100 p-3 rounded-full">
+                            <i class="fas fa-database text-blue-600 text-xl"></i>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-white rounded-xl shadow-md p-6 card-hover">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-gray-500 text-sm">API Status</p>
+                            <p id="apiStatus" class="text-3xl font-bold text-green-600">Healthy</p>
+                        </div>
+                        <div class="bg-green-100 p-3 rounded-full">
+                            <i class="fas fa-heartbeat text-green-600 text-xl"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- API Key Management -->
+            <div class="bg-white rounded-xl shadow-md p-6 mb-8">
+                <h3 class="text-xl font-semibold text-gray-800 mb-4">API Key Management</h3>
+                <div class="flex gap-4 mb-4">
+                    <input type="text" id="apiKeyInput" placeholder="Enter your API key" 
+                           class="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent">
+                    <button onclick="setApiKey()" class="bg-purple-600 text-white px-6 py-2 rounded-lg hover:bg-purple-700 transition">
+                        Set API Key
+                    </button>
+                </div>
+                <div id="apiKeyDisplay" class="hidden">
+                    <p class="text-sm text-gray-600">Current API Key: <span id="currentApiKey" class="font-mono"></span></p>
+                </div>
+            </div>
+
+            <!-- Live API Tester -->
+            <div class="bg-white rounded-xl shadow-md p-6">
+                <h3 class="text-xl font-semibold text-gray-800 mb-4">Live API Tester</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Endpoint</label>
+                        <select id="testEndpoint" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500">
+                            <option value="/api/search">Search Songs</option>
+                            <option value="/api/play">Play Song</option>
+                            <option value="/api/video">Get Video Info</option>
+                            <option value="/api/audio">Get Audio Stream</option>
+                            <option value="/api/playlist">Get Playlist</option>
+                            <option value="/api/trending">Get Trending</option>
+                            <option value="/api/related">Get Related</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Parameter</label>
+                        <input type="text" id="testParam" placeholder="Song name or video ID" 
+                               class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500">
+                    </div>
+                </div>
+                <button onclick="testAPI()" class="bg-purple-600 text-white px-6 py-2 rounded-lg hover:bg-purple-700 transition">
+                    Test API
+                </button>
+                <div id="testResult" class="mt-4 hidden">
+                    <h4 class="font-semibold text-gray-800 mb-2">Response:</h4>
+                    <pre id="testResultContent" class="code-block p-4 rounded-lg overflow-auto max-h-96 text-sm"></pre>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- API Endpoints Section -->
+    <section id="endpoints" class="py-16 bg-gray-100">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <h2 class="text-3xl font-bold text-gray-800 mb-8">API Endpoints</h2>
+            
+            <div class="space-y-6">
+                <!-- Search Endpoint -->
+                <div class="bg-white rounded-xl shadow-md p-6 endpoint-card">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-xl font-semibold text-gray-800">Search Songs</h3>
+                        <span class="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm font-medium">GET</span>
+                    </div>
+                    <code class="text-purple-600 font-mono text-lg">/api/search?song={song_name}</code>
+                    <p class="text-gray-600 mt-3">Search for songs on YouTube. Returns a list of matching songs with metadata.</p>
+                    <div class="mt-4">
+                        <h4 class="font-semibold text-gray-700 mb-2">Parameters:</h4>
+                        <ul class="list-disc list-inside text-gray-600 space-y-1">
+                            <li><code class="bg-gray-100 px-2 py-1 rounded">song</code> (required) - Song name to search for</li>
+                        </ul>
+                    </div>
+                    <div class="mt-4">
+                        <h4 class="font-semibold text-gray-700 mb-2">Response:</h4>
+                        <pre class="code-block p-4 rounded-lg text-sm overflow-auto">[
+  {
+    "video_id": "dQw4w9WgXcQ",
+    "title": "Never Gonna Give You Up",
+    "duration": 212,
+    "thumbnail": "https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg",
+    "uploader": "Rick Astley",
+    "view_count": 1400000000,
+    "upload_date": "20091025",
+    "url": "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+  }
+]</pre>
+                    </div>
+                </div>
+
+                <!-- Play Endpoint -->
+                <div class="bg-white rounded-xl shadow-md p-6 endpoint-card">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-xl font-semibold text-gray-800">Play Song</h3>
+                        <span class="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm font-medium">GET</span>
+                    </div>
+                    <code class="text-purple-600 font-mono text-lg">/api/play?song={song_name}</code>
+                    <p class="text-gray-600 mt-3">Get direct audio information for a song. Returns the first search result.</p>
+                </div>
+
+                <!-- Video Endpoint -->
+                <div class="bg-white rounded-xl shadow-md p-6 endpoint-card">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-xl font-semibold text-gray-800">Video Details</h3>
+                        <span class="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm font-medium">GET</span>
+                    </div>
+                    <code class="text-purple-600 font-mono text-lg">/api/video?id={video_id}</code>
+                    <p class="text-gray-600 mt-3">Get detailed video information including description, tags, and categories.</p>
+                </div>
+
+                <!-- Audio Endpoint -->
+                <div class="bg-white rounded-xl shadow-md p-6 endpoint-card">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-xl font-semibold text-gray-800">Audio Stream</h3>
+                        <span class="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm font-medium">GET</span>
+                    </div>
+                    <code class="text-purple-600 font-mono text-lg">/api/audio?id={video_id}</code>
+                    <p class="text-gray-600 mt-3">Get downloadable audio stream URL with quality information.</p>
+                </div>
+
+                <!-- Lyrics Endpoint -->
+                <div class="bg-white rounded-xl shadow-md p-6 endpoint-card">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-xl font-semibold text-gray-800">Lyrics</h3>
+                        <span class="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm font-medium">GET</span>
+                    </div>
+                    <code class="text-purple-600 font-mono text-lg">/api/lyrics?song={song_name}</code>
+                    <p class="text-gray-600 mt-3">Get lyrics for a song from video captions or auto-generated captions.</p>
+                </div>
+
+                <!-- Playlist Endpoint -->
+                <div class="bg-white rounded-xl shadow-md p-6 endpoint-card">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-xl font-semibold text-gray-800">Playlist</h3>
+                        <span class="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm font-medium">GET</span>
+                    </div>
+                    <code class="text-purple-600 font-mono text-lg">/api/playlist?id={playlist_id}</code>
+                    <p class="text-gray-600 mt-3">Get playlist information and all tracks with metadata.</p>
+                </div>
+
+                <!-- Trending Endpoint -->
+                <div class="bg-white rounded-xl shadow-md p-6 endpoint-card">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-xl font-semibold text-gray-800">Trending</h3>
+                        <span class="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm font-medium">GET</span>
+                    </div>
+                    <code class="text-purple-600 font-mono text-lg">/api/trending?category={category}</code>
+                    <p class="text-gray-600 mt-3">Get trending videos in a specific category (default: music).</p>
+                </div>
+
+                <!-- Related Endpoint -->
+                <div class="bg-white rounded-xl shadow-md p-6 endpoint-card">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-xl font-semibold text-gray-800">Related Videos</h3>
+                        <span class="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm font-medium">GET</span>
+                    </div>
+                    <code class="text-purple-600 font-mono text-lg">/api/related?id={video_id}</code>
+                    <p class="text-gray-600 mt-3">Get related videos for a given video.</p>
+                </div>
+
+                <!-- Health Endpoint -->
+                <div class="bg-white rounded-xl shadow-md p-6 endpoint-card">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-xl font-semibold text-gray-800">Health Check</h3>
+                        <span class="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm font-medium">GET</span>
+                    </div>
+                    <code class="text-purple-600 font-mono text-lg">/api/health</code>
+                    <p class="text-gray-600 mt-3">Check API status, cache status, and extractor version.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Examples Section -->
+    <section id="examples" class="py-16">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <h2 class="text-3xl font-bold text-gray-800 mb-8">Usage Examples</h2>
+            
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <!-- Python Example -->
+                <div class="bg-white rounded-xl shadow-md p-6">
+                    <h3 class="text-xl font-semibold text-gray-800 mb-4">
+                        <i class="fab fa-python text-blue-500 mr-2"></i>Python
+                    </h3>
+                    <pre class="code-block p-4 rounded-lg text-sm overflow-auto">import requests
+
+API_BASE = "http://your-api-url.com/api"
+API_KEY = "your-api-key"
+
+headers = {"X-API-Key": API_KEY}
+
+# Search for a song
+response = requests.get(
+    f"{API_BASE}/search",
+    params={"song": "Never Gonna Give You Up"},
+    headers=headers
+)
+results = response.json()
+
+# Get audio stream
+video_id = results[0]["video_id"]
+audio = requests.get(
+    f"{API_BASE}/audio",
+    params={"id": video_id},
+    headers=headers
+).json()
+
+print(f"Stream URL: {audio['url']}")</pre>
+                </div>
+
+                <!-- JavaScript Example -->
+                <div class="bg-white rounded-xl shadow-md p-6">
+                    <h3 class="text-xl font-semibold text-gray-800 mb-4">
+                        <i class="fab fa-js text-yellow-500 mr-2"></i>JavaScript
+                    </h3>
+                    <pre class="code-block p-4 rounded-lg text-sm overflow-auto">const API_BASE = "http://your-api-url.com/api";
+const API_KEY = "your-api-key";
+
+const headers = {
+    "X-API-Key": API_KEY
+};
+
+// Search for a song
+async function searchSong(songName) {
+    const response = await fetch(
+        `${API_BASE}/search?song=${encodeURIComponent(songName)}`,
+        { headers }
+    );
+    return await response.json();
+}
+
+// Get audio stream
+async function getAudioStream(videoId) {
+    const response = await fetch(
+        `${API_BASE}/audio?id=${videoId}`,
+        { headers }
+    );
+    return await response.json();
+}
+
+// Usage
+const results = await searchSong("Never Gonna Give You Up");
+const audio = await getAudioStream(results[0].video_id);
+console.log("Stream URL:", audio.url);</pre>
+                </div>
+
+                <!-- Pyrogram Example -->
+                <div class="bg-white rounded-xl shadow-md p-6">
+                    <h3 class="text-xl font-semibold text-gray-800 mb-4">
+                        <i class="fab fa-telegram text-blue-400 mr-2"></i>Pyrogram (Telegram Bot)
+                    </h3>
+                    <pre class="code-block p-4 rounded-lg text-sm overflow-auto">from pyrogram import Client, filters
+import requests
+
+API_BASE = "http://your-api-url.com/api"
+API_KEY = "your-api-key"
+
+@app.on_message(filters.command("play"))
+async def play_song(client, message):
+    song_name = " ".join(message.command[1:])
+    
+    # Search for song
+    response = requests.get(
+        f"{API_BASE}/search",
+        params={"song": song_name},
+        headers={"X-API-Key": API_KEY}
+    )
+    results = response.json()
+    
+    if not results:
+        await message.reply("Song not found!")
+        return
+    
+    video = results[0]
+    
+    # Get audio stream
+    audio = requests.get(
+        f"{API_BASE}/audio",
+        params={"id": video["video_id"]},
+        headers={"X-API-Key": API_KEY}
+    ).json()
+    
+    # Send audio to chat
+    await message.reply_audio(
+        audio["url"],
+        title=video["title"],
+        duration=video["duration"],
+        thumb=video["thumbnail"]
+    )</pre>
+                </div>
+
+                <!-- Telethon Example -->
+                <div class="bg-white rounded-xl shadow-md p-6">
+                    <h3 class="text-xl font-semibold text-gray-800 mb-4">
+                        <i class="fab fa-telegram text-blue-400 mr-2"></i>Telethon (Telegram Bot)
+                    </h3>
+                    <pre class="code-block p-4 rounded-lg text-sm overflow-auto">from telethon import TelegramClient, events
+import requests
+
+API_BASE = "http://your-api-url.com/api"
+API_KEY = "your-api-key"
+
+@client.on(events.NewMessage(pattern='/play'))
+async def handler(event):
+    song_name = event.message.message.split('/play ')[1]
+    
+    # Search for song
+    response = requests.get(
+        f"{API_BASE}/search",
+        params={"song": song_name},
+        headers={"X-API-Key": API_KEY}
+    )
+    results = response.json()
+    
+    if not results:
+        await event.reply("Song not found!")
+        return
+    
+    video = results[0]
+    
+    # Get audio stream
+    audio = requests.get(
+        f"{API_BASE}/audio",
+        params={"id": video["video_id"]},
+        headers={"X-API-Key": API_KEY}
+    ).json()
+    
+    # Send audio to chat
+    await event.reply(
+        f"🎵 {video['title']}\n"
+        f"👤 {video['uploader']}\n"
+        f"⏱️ {video['duration']}s\n"
+        f"🔗 {audio['url']}"
+    )</pre>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Pricing Section -->
+    <section id="pricing" class="py-16 bg-gray-100">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <h2 class="text-3xl font-bold text-gray-800 mb-8">Pricing Plans</h2>
+            
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <!-- Free Plan -->
+                <div class="bg-white rounded-xl shadow-md p-8 card-hover">
+                    <h3 class="text-2xl font-bold text-gray-800 mb-2">Free</h3>
+                    <p class="text-gray-500 mb-6">For testing and development</p>
+                    <div class="text-4xl font-bold text-purple-600 mb-6">$0<span class="text-lg text-gray-500">/month</span></div>
+                    <ul class="space-y-3 mb-8">
+                        <li class="flex items-center text-gray-600">
+                            <i class="fas fa-check text-green-500 mr-3"></i>
+                            100 requests/day
+                        </li>
+                        <li class="flex items-center text-gray-600">
+                            <i class="fas fa-check text-green-500 mr-3"></i>
+                            Basic rate limiting
+                        </li>
+                        <li class="flex items-center text-gray-600">
+                            <i class="fas fa-check text-green-500 mr-3"></i>
+                            Community support
+                        </li>
+                        <li class="flex items-center text-gray-400">
+                            <i class="fas fa-times text-red-500 mr-3"></i>
+                            No priority queue
+                        </li>
+                    </ul>
+                    <button class="w-full bg-gray-200 text-gray-800 py-3 rounded-lg font-semibold hover:bg-gray-300 transition">
+                        Get Started
+                    </button>
+                </div>
+
+                <!-- Pro Plan -->
+                <div class="bg-white rounded-xl shadow-md p-8 card-hover border-2 border-purple-500 relative">
+                    <div class="absolute top-0 right-0 bg-purple-500 text-white px-4 py-1 rounded-bl-lg rounded-tr-lg text-sm font-semibold">
+                        Popular
+                    </div>
+                    <h3 class="text-2xl font-bold text-gray-800 mb-2">Pro</h3>
+                    <p class="text-gray-500 mb-6">For production applications</p>
+                    <div class="text-4xl font-bold text-purple-600 mb-6">$29<span class="text-lg text-gray-500">/month</span></div>
+                    <ul class="space-y-3 mb-8">
+                        <li class="flex items-center text-gray-600">
+                            <i class="fas fa-check text-green-500 mr-3"></i>
+                            10,000 requests/day
+                        </li>
+                        <li class="flex items-center text-gray-600">
+                            <i class="fas fa-check text-green-500 mr-3"></i>
+                            Priority queue
+                        </li>
+                        <li class="flex items-center text-gray-600">
+                            <i class="fas fa-check text-green-500 mr-3"></i>
+                            Extended cache TTL
+                        </li>
+                        <li class="flex items-center text-gray-600">
+                            <i class="fas fa-check text-green-500 mr-3"></i>
+                            Email support
+                        </li>
+                    </ul>
+                    <button class="w-full bg-purple-600 text-white py-3 rounded-lg font-semibold hover:bg-purple-700 transition">
+                        Subscribe
+                    </button>
+                </div>
+
+                <!-- Enterprise Plan -->
+                <div class="bg-white rounded-xl shadow-md p-8 card-hover">
+                    <h3 class="text-2xl font-bold text-gray-800 mb-2">Enterprise</h3>
+                    <p class="text-gray-500 mb-6">For large-scale applications</p>
+                    <div class="text-4xl font-bold text-purple-600 mb-6">$99<span class="text-lg text-gray-500">/month</span></div>
+                    <ul class="space-y-3 mb-8">
+                        <li class="flex items-center text-gray-600">
+                            <i class="fas fa-check text-green-500 mr-3"></i>
+                            Unlimited requests
+                        </li>
+                        <li class="flex items-center text-gray-600">
+                            <i class="fas fa-check text-green-500 mr-3"></i>
+                            Dedicated server
+                        </li>
+                        <li class="flex items-center text-gray-600">
+                            <i class="fas fa-check text-green-500 mr-3"></i>
+                            Custom rate limits
+                        </li>
+                        <li class="flex items-center text-gray-600">
+                            <i class="fas fa-check text-green-500 mr-3"></i>
+                            24/7 priority support
+                        </li>
+                    </ul>
+                    <button class="w-full bg-gray-800 text-white py-3 rounded-lg font-semibold hover:bg-gray-900 transition">
+                        Contact Sales
+                    </button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Documentation Section -->
+    <section id="docs" class="py-16">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <h2 class="text-3xl font-bold text-gray-800 mb-8">Developer Documentation</h2>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div class="bg-white rounded-xl shadow-md p-6">
+                    <h3 class="text-xl font-semibold text-gray-800 mb-4">
+                        <i class="fas fa-book text-purple-600 mr-2"></i>Authentication
+                    </h3>
+                    <p class="text-gray-600 mb-4">All API requests require an API key sent in the <code class="bg-gray-100 px-2 py-1 rounded">X-API-Key</code> header.</p>
+                    <pre class="code-block p-4 rounded-lg text-sm">curl -H "X-API-Key: your-api-key" \
+  "http://your-api-url.com/api/search?song=example"</pre>
+                </div>
+
+                <div class="bg-white rounded-xl shadow-md p-6">
+                    <h3 class="text-xl font-semibold text-gray-800 mb-4">
+                        <i class="fas fa-tachometer-alt text-purple-600 mr-2"></i>Rate Limiting
+                    </h3>
+                    <p class="text-gray-600 mb-4">API requests are rate limited based on your plan. Exceeding limits will return a 429 status code.</p>
+                    <pre class="code-block p-4 rounded-lg text-sm">{
+  "error": "Rate limit exceeded",
+  "detail": "Too many requests"
+}</pre>
+                </div>
+
+                <div class="bg-white rounded-xl shadow-md p-6">
+                    <h3 class="text-xl font-semibold text-gray-800 mb-4">
+                        <i class="fas fa-database text-purple-600 mr-2"></i>Caching
+                    </h3>
+                    <p class="text-gray-600 mb-4">Responses are cached for 1 hour by default. Stream URLs are cached for 30 minutes.</p>
+                    <pre class="code-block p-4 rounded-lg text-sm">Cache-Control: max-age=3600
+X-Cache: HIT</pre>
+                </div>
+
+                <div class="bg-white rounded-xl shadow-md p-6">
+                    <h3 class="text-xl font-semibold text-gray-800 mb-4">
+                        <i class="fas fa-shield-alt text-purple-600 mr-2"></i>Error Handling
+                    </h3>
+                    <p class="text-gray-600 mb-4">All errors return a JSON response with error details and status code.</p>
+                    <pre class="code-block p-4 rounded-lg text-sm">{
+  "error": "Video not found",
+  "detail": "The requested video does not exist",
+  "status_code": 404
+}</pre>
+                </div>
+            </div>
+
+            <!-- Features -->
+            <div class="mt-12">
+                <h3 class="text-2xl font-bold text-gray-800 mb-6">Key Features</h3>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div class="bg-white rounded-xl shadow-md p-6 card-hover">
+                        <div class="bg-purple-100 w-12 h-12 rounded-lg flex items-center justify-center mb-4">
+                            <i class="fas fa-bolt text-purple-600 text-xl"></i>
+                        </div>
+                        <h4 class="font-semibold text-gray-800 mb-2">Fast Response Times</h4>
+                        <p class="text-gray-600 text-sm">Average response time under 500ms with Redis caching.</p>
+                    </div>
+                    <div class="bg-white rounded-xl shadow-md p-6 card-hover">
+                        <div class="bg-purple-100 w-12 h-12 rounded-lg flex items-center justify-center mb-4">
+                            <i class="fas fa-redo text-purple-600 text-xl"></i>
+                        </div>
+                        <h4 class="font-semibold text-gray-800 mb-2">Auto-Retry & Fallback</h4>
+                        <p class="text-gray-600 text-sm">Automatic retry with proxy rotation for high reliability.</p>
+                    </div>
+                    <div class="bg-white rounded-xl shadow-md p-6 card-hover">
+                        <div class="bg-purple-100 w-12 h-12 rounded-lg flex items-center justify-center mb-4">
+                            <i class="fas fa-sync text-purple-600 text-xl"></i>
+                        </div>
+                        <h4 class="font-semibold text-gray-800 mb-2">Auto-Update Extractors</h4>
+                        <p class="text-gray-600 text-sm">Latest yt-dlp version with automatic extractor updates.</p>
+                    </div>
+                    <div class="bg-white rounded-xl shadow-md p-6 card-hover">
+                        <div class="bg-purple-100 w-12 h-12 rounded-lg flex items-center justify-center mb-4">
+                            <i class="fas fa-robot text-purple-600 text-xl"></i>
+                        </div>
+                        <h4 class="font-semibold text-gray-800 mb-2">Telegram Bot Ready</h4>
+                        <p class="text-gray-600 text-sm">Optimized for Pyrogram, Telethon, and other frameworks.</p>
+                    </div>
+                    <div class="bg-white rounded-xl shadow-md p-6 card-hover">
+                        <div class="bg-purple-100 w-12 h-12 rounded-lg flex items-center justify-center mb-4">
+                            <i class="fas fa-chart-bar text-purple-600 text-xl"></i>
+                        </div>
+                        <h4 class="font-semibold text-gray-800 mb-2">Analytics Dashboard</h4>
+                        <p class="text-gray-600 text-sm">Real-time statistics and usage monitoring.</p>
+                    </div>
+                    <div class="bg-white rounded-xl shadow-md p-6 card-hover">
+                        <div class="bg-purple-100 w-12 h-12 rounded-lg flex items-center justify-center mb-4">
+                            <i class="fas fa-globe text-purple-600 text-xl"></i>
+                        </div>
+                        <h4 class="font-semibold text-gray-800 mb-2">Global CDN</h4>
+                        <p class="text-gray-600 text-sm">Deploy worldwide with Vercel and Render integration.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="gradient-bg text-white py-12">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
+                <div>
+                    <div class="flex items-center mb-4">
+                        <i class="fas fa-music text-2xl mr-3"></i>
+                        <span class="font-bold text-xl">YouTube Music API</span>
+                    </div>
+                    <p class="text-purple-200">Production-ready YouTube Music API optimized for Telegram music bots.</p>
+                </div>
+                <div>
+                    <h4 class="font-semibold mb-4">API</h4>
+                    <ul class="space-y-2 text-purple-200">
+                        <li><a href="#endpoints" class="hover:text-white">Endpoints</a></li>
+                        <li><a href="#examples" class="hover:text-white">Examples</a></li>
+                        <li><a href="#docs" class="hover:text-white">Documentation</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="font-semibold mb-4">Resources</h4>
+                    <ul class="space-y-2 text-purple-200">
+                        <li><a href="#pricing" class="hover:text-white">Pricing</a></li>
+                        <li><a href="#" class="hover:text-white">Status</a></li>
+                        <li><a href="#" class="hover:text-white">Support</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="font-semibold mb-4">Legal</h4>
+                    <ul class="space-y-2 text-purple-200">
+                        <li><a href="#" class="hover:text-white">Privacy Policy</a></li>
+                        <li><a href="#" class="hover:text-white">Terms of Service</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="border-t border-purple-400 mt-8 pt-8 text-center text-purple-200">
+                <p>&copy; 2024 YouTube Music API. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Mobile menu toggle
+        document.getElementById('mobileMenuBtn').addEventListener('click', function() {
+            document.getElementById('mobileMenu').classList.toggle('hidden');
+        });
+
+        // API Key management
+        function setApiKey() {
+            const apiKey = document.getElementById('apiKeyInput').value;
+            if (apiKey) {
+                localStorage.setItem('youtubeMusicApiKey', apiKey);
+                document.getElementById('currentApiKey').textContent = apiKey.substring(0, 8) + '...';
+                document.getElementById('apiKeyDisplay').classList.remove('hidden');
+            }
+        }
+
+        // Load saved API key
+        window.onload = function() {
+            const savedKey = localStorage.getItem('youtubeMusicApiKey');
+            if (savedKey) {
+                document.getElementById('apiKeyInput').value = savedKey;
+                document.getElementById('currentApiKey').textContent = savedKey.substring(0, 8) + '...';
+                document.getElementById('apiKeyDisplay').classList.remove('hidden');
+            }
+            
+            // Load stats
+            loadStats();
+        };
+
+        // Load API stats
+        async function loadStats() {
+            try {
+                const response = await fetch('/api/admin/stats', {
+                    headers: {
+                        'X-API-Key': localStorage.getItem('youtubeMusicApiKey') || ''
+                    }
+                });
+                if (response.ok) {
+                    const stats = await response.json();
+                    document.getElementById('totalRequests').textContent = stats.total_requests || 0;
+                    
+                    const successRate = stats.total_requests > 0 
+                        ? ((stats.successful_requests / stats.total_requests) * 100).toFixed(1)
+                        : 0;
+                    document.getElementById('successRate').textContent = successRate + '%';
+                    
+                    const totalCacheOps = stats.cache_hits + stats.cache_misses;
+                    const cacheHitRate = totalCacheOps > 0
+                        ? ((stats.cache_hits / totalCacheOps) * 100).toFixed(1)
+                        : 0;
+                    document.getElementById('cacheHitRate').textContent = cacheHitRate + '%';
+                }
+            } catch (error) {
+                console.log('Could not load stats');
+            }
+        }
+
+        // Test API
+        async function testAPI() {
+            const endpoint = document.getElementById('testEndpoint').value;
+            const param = document.getElementById('testParam').value;
+            const apiKey = localStorage.getItem('youtubeMusicApiKey') || '';
+            
+            if (!param) {
+                alert('Please enter a parameter');
+                return;
+            }
+
+            let url = endpoint;
+            if (endpoint.includes('search') || endpoint.includes('play') || endpoint.includes('lyrics')) {
+                url += `?song=${encodeURIComponent(param)}`;
+            } else if (endpoint.includes('trending')) {
+                url += `?category=${encodeURIComponent(param)}`;
+            } else {
+                url += `?id=${encodeURIComponent(param)}`;
+            }
+
+            try {
+                const headers = {};
+                if (apiKey) {
+                    headers['X-API-Key'] = apiKey;
+                }
+
+                const response = await fetch(url, { headers });
+                const data = await response.json();
+                
+                document.getElementById('testResult').classList.remove('hidden');
+                document.getElementById('testResultContent').textContent = JSON.stringify(data, null, 2);
+            } catch (error) {
+                document.getElementById('testResult').classList.remove('hidden');
+                document.getElementById('testResultContent').textContent = 'Error: ' + error.message;
+            }
+        }
+
+        // Smooth scroll
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                document.querySelector(this.getAttribute('href')).scrollIntoView({
+                    behavior: 'smooth'
+                });
+            });
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,27 @@
+services:
+  - type: web
+    name: youtube-music-api
+    env: python
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: API_HOST
+        value: 0.0.0.0
+      - key: API_PORT
+        value: 8000
+      - key: ENVIRONMENT
+        value: production
+      - key: REDIS_HOST
+        value: localhost
+      - key: REDIS_PORT
+        value: 6379
+      - key: ENABLE_CACHE
+        value: false
+      - key: LOG_LEVEL
+        value: INFO
+
+  - type: redis
+    name: youtube-music-redis
+    plan: free
+    maxmemoryPolicy: allkeys-lru
