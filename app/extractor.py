@@ -90,14 +90,23 @@ class YouTubeExtractor:
             opts['playlistend'] = max_results
 
             logger.info(f"Searching for: {query}")
+            logger.info(f"yt-dlp options: {opts}")
             
             with yt_dlp.YoutubeDL(opts) as ydl:
-                result = ydl.extract_info(f"ytsearch{max_results}:{query}", download=False)
-                
-                logger.info(f"Search result: {result}")
+                try:
+                    result = ydl.extract_info(f"ytsearch{max_results}:{query}", download=False)
+                    logger.info(f"Search result type: {type(result)}")
+                    logger.info(f"Search result keys: {result.keys() if result else 'None'}")
+                except Exception as ydl_error:
+                    logger.error(f"yt-dlp extraction error: {str(ydl_error)}")
+                    logger.error(f"yt-dlp error type: {type(ydl_error)}")
+                    # Fallback to Invidious
+                    logger.info("Falling back to Invidious API")
+                    return await self.search_invidious(query, max_results)
                 
                 if not result or 'entries' not in result:
                     logger.warning(f"No results found for query: {query}")
+                    logger.warning(f"Result: {result}")
                     # Fallback to Invidious
                     logger.info("Falling back to Invidious API")
                     return await self.search_invidious(query, max_results)
@@ -117,10 +126,12 @@ class YouTubeExtractor:
                             'url': entry.get('url', f"https://www.youtube.com/watch?v={entry.get('id', '')}")
                         })
 
+                logger.info(f"Successfully extracted {len(entries)} entries")
                 return entries
 
         except Exception as e:
             logger.error(f"Search error: {str(e)}")
+            logger.error(f"Error type: {type(e)}")
             # Fallback to Invidious
             logger.info("Falling back to Invidious API due to error")
             return await self.search_invidious(query, max_results)
