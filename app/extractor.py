@@ -5,6 +5,7 @@ from loguru import logger
 from app.config import settings
 import random
 import aiohttp
+import os
 
 
 class YouTubeExtractor:
@@ -18,6 +19,7 @@ class YouTubeExtractor:
             'https://invidious.namazso.eu'
         ]
         self.current_invidious_index = 0
+        self.youtube_api_key = os.getenv('YOUTUBE_API_KEY')
 
     def _get_ydl_options(self, proxy: Optional[str] = None) -> Dict[str, Any]:
         opts = {
@@ -49,6 +51,48 @@ class YouTubeExtractor:
         instance = self.invidious_instances[self.current_invidious_index]
         self.current_invidious_index = (self.current_invidious_index + 1) % len(self.invidious_instances)
         return instance
+
+    async def search_youtube_api(self, query: str, max_results: int = 10) -> List[Dict[str, Any]]:
+        """Search using YouTube Data API as fallback"""
+        if not self.youtube_api_key:
+            logger.warning("YouTube API key not configured")
+            return []
+        
+        try:
+            url = f"https://www.googleapis.com/youtube/v3/search"
+            params = {
+                'part': 'snippet',
+                'q': query,
+                'type': 'video',
+                'maxResults': max_results,
+                'key': self.youtube_api_key
+            }
+            
+            async with aiohttp.ClientSession() as session:
+                async with session.get(url, params=params, timeout=aiohttp.ClientTimeout(total=30)) as response:
+                    if response.status == 200:
+                        data = await response.json()
+                        entries = []
+                        for item in data.get('items', []):
+                            entries.append({
+                                'video_id': item.get('id', {}).get('videoId', ''),
+                                'title': item.get('snippet', {}).get('title', ''),
+                                'duration': 0,  # YouTube API doesn't return duration in search
+                                'thumbnail': item.get('snippet', {}).get('thumbnails', {}).get('default', {}).get('url', ''),
+                                'uploader': item.get('snippet', {}).get('channelTitle', ''),
+                                'uploader_id': item.get('snippet', {}).get('channelId', ''),
+                                'view_count': 0,  # YouTube API doesn't return view count in search
+                                'upload_date': item.get('snippet', {}).get('publishedAt', ''),
+                                'url': f"https://www.youtube.com/watch?v={item.get('id', {}).get('videoId', '')}"
+                            })
+                        logger.info(f"YouTube API search successful: {len(entries)} results")
+                        return entries
+                    else:
+                        logger.warning(f"YouTube API search failed with status: {response.status}")
+                        return []
+        except Exception as e:
+            logger.error(f"YouTube API search error: {str(e)}")
+            return []
 
     async def search_invidious(self, query: str, max_results: int = 10) -> List[Dict[str, Any]]:
         """Search using Invidious API as fallback"""
@@ -100,14 +144,22 @@ class YouTubeExtractor:
                 except Exception as ydl_error:
                     logger.error(f"yt-dlp extraction error: {str(ydl_error)}")
                     logger.error(f"yt-dlp error type: {type(ydl_error)}")
-                    # Fallback to Invidious
+                    # Fallback to YouTube API first, then Invidious
+                    logger.info("Falling back to YouTube API")
+                    yt_api_results = await self.search_youtube_api(query, max_results)
+                    if yt_api_results:
+                        return yt_api_results
                     logger.info("Falling back to Invidious API")
                     return await self.search_invidious(query, max_results)
                 
                 if not result or 'entries' not in result:
                     logger.warning(f"No results found for query: {query}")
                     logger.warning(f"Result: {result}")
-                    # Fallback to Invidious
+                    # Fallback to YouTube API first, then Invidious
+                    logger.info("Falling back to YouTube API")
+                    yt_api_results = await self.search_youtube_api(query, max_results)
+                    if yt_api_results:
+                        return yt_api_results
                     logger.info("Falling back to Invidious API")
                     return await self.search_invidious(query, max_results)
 
@@ -132,8 +184,12 @@ class YouTubeExtractor:
         except Exception as e:
             logger.error(f"Search error: {str(e)}")
             logger.error(f"Error type: {type(e)}")
-            # Fallback to Invidious
-            logger.info("Falling back to Invidious API due to error")
+            # Fallback to YouTube API first, then Invidious
+            logger.info("Falling back to YouTube API due to error")
+            yt_api_results = await self.search_youtube_api(query, max_results)
+            if yt_api_results:
+                return yt_api_results
+            logger.info("Falling back to Invidious API")
             return await self.search_invidious(query, max_results)
 
     async def get_video_info(self, video_id: str) -> Optional[Dict[str, Any]]:
