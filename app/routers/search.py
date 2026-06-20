@@ -30,6 +30,8 @@ async def search_songs(
     thumbnail, uploader, view count, and video ID.
     """
     try:
+        logger.info(f"Search request received for: {song}")
+        
         # Check cache
         cache_key = f"search:{song}"
         cached = await cache.get(cache_key)
@@ -38,9 +40,12 @@ async def search_songs(
             return cached
 
         # Perform search
+        logger.info("Calling extractor.search")
         results = await extractor.search(song, max_results=10)
+        logger.info(f"Extractor returned {len(results)} results")
         
         if not results:
+            logger.warning(f"No results from extractor for: {song}")
             raise HTTPException(status_code=404, detail="No results found")
 
         # Cache results
