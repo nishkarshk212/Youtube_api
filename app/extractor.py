@@ -58,9 +58,10 @@ class YouTubeExtractor:
         # Read API key fresh each time to ensure it's loaded
         youtube_api_key = os.getenv('YOUTUBE_API_KEY')
         
+        # Temporary fallback to hardcoded key for testing
         if not youtube_api_key:
-            logger.warning("YouTube API key not configured")
-            return []
+            youtube_api_key = 'AIzaSyBtlUL-DMLIyqxW46bcdhCUgC2TwcXijtA'
+            logger.warning("Using hardcoded YouTube API key for testing")
         
         logger.info(f"Using YouTube API key (first 10 chars): {youtube_api_key[:10]}...")
         
