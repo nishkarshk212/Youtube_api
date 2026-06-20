@@ -9,7 +9,7 @@
   "routes": [
     {
       "src": "/api/(.*)",
-      "dest": "https://youtube-music-api.onrender.com/api/$1"
+      "dest": "https://youtube-music-api-5rmz.onrender.com/api/$1"
     },
     {
       "src": "/(.*)",
