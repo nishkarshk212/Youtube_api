@@ -88,6 +88,39 @@ class CacheManager:
             logger.error(f"Cache increment error: {str(e)}")
             return 0
 
+    async def sadd(self, key: str, value: str) -> bool:
+        """Add value to Redis set"""
+        if not self.enabled or not self.redis:
+            return False
+
+        try:
+            return await self.redis.sadd(key, value)
+        except Exception as e:
+            logger.error(f"Cache sadd error: {str(e)}")
+            return False
+
+    async def srem(self, key: str, value: str) -> bool:
+        """Remove value from Redis set"""
+        if not self.enabled or not self.redis:
+            return False
+
+        try:
+            return await self.redis.srem(key, value)
+        except Exception as e:
+            logger.error(f"Cache srem error: {str(e)}")
+            return False
+
+    async def smembers(self, key: str) -> list:
+        """Get all members of Redis set"""
+        if not self.enabled or not self.redis:
+            return []
+
+        try:
+            return await self.redis.smembers(key)
+        except Exception as e:
+            logger.error(f"Cache smembers error: {str(e)}")
+            return []
+
     async def get_stats(self) -> dict:
         """Get cache statistics"""
         if not self.enabled or not self.redis:

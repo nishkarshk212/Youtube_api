@@ -21,21 +21,44 @@ async def verify_api_key(api_key: Optional[str] = Security(api_key_header)) -> s
             detail="API key is missing",
         )
 
-    if api_key not in settings.api_keys_list:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Invalid API key",
-        )
+    # Check against environment variable keys first
+    if api_key in settings.api_keys_list:
+        await cache.increment(f"api_key:{api_key}:requests")
+        return api_key
 
-    # Increment request count for this API key
-    await cache.increment(f"api_key:{api_key}:requests")
+    # Check against Redis-stored keys
+    try:
+        active = await cache.get(f"api_key:{api_key}:active")
+        if active:
+            # Increment request count for this API key
+            await cache.increment(f"api_key:{api_key}:requests")
+            return api_key
+    except Exception as e:
+        logger.error(f"Redis API key check error: {str(e)}")
 
-    return api_key
+    raise HTTPException(
+        status_code=status.HTTP_403_FORBIDDEN,
+        detail="Invalid API key",
+    )
 
 
 async def get_optional_api_key(api_key: Optional[str] = Security(api_key_header)) -> Optional[str]:
     """Get optional API key (for public endpoints)"""
-    if api_key and settings.api_keys_list and api_key in settings.api_keys_list:
+    if not api_key:
+        return None
+
+    # Check against environment variable keys first
+    if api_key in settings.api_keys_list:
         await cache.increment(f"api_key:{api_key}:requests")
         return api_key
+
+    # Check against Redis-stored keys
+    try:
+        active = await cache.get(f"api_key:{api_key}:active")
+        if active:
+            await cache.increment(f"api_key:{api_key}:requests")
+            return api_key
+    except Exception as e:
+        logger.error(f"Redis API key check error: {str(e)}")
+
     return None
