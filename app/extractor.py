@@ -21,6 +21,7 @@ class YouTubeExtractor:
             'nocheckcertificate': True,
             'default_search': 'ytsearch',
             'source_address': '0.0.0.0',
+            'socket_timeout': 30,
         }
 
         if proxy:
