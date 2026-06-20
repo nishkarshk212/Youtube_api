@@ -77,11 +77,10 @@ async def list_api_keys(request: Request, api_key: str = Depends(verify_api_key)
 
 
 @router.post("/api-keys/generate")
-@limiter.limit("5/minute")
+@limiter.limit("10/minute")
 async def generate_api_key(
     plan: str = "free",
-    request: Request = None,
-    api_key: str = Depends(verify_api_key)
+    request: Request = None
 ):
     """
     Generate a new API key with specified plan.

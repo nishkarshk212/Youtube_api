@@ -3,6 +3,9 @@ from slowapi import Limiter
 from slowapi.util import get_remote_address
 from typing import Optional
 from loguru import logger
+import secrets
+import string
+from datetime import datetime
 
 from app.extractor import extractor
 from app.cache import cache
@@ -148,3 +151,57 @@ async def get_lyrics(
         logger.error(f"Lyrics error: {str(e)}")
         await cache.increment("stats:failed_requests")
         raise HTTPException(status_code=500, detail="Failed to get lyrics")
+
+
+@router.post("/generate-key")
+@limiter.limit("5/minute")
+async def generate_api_key_public(
+    plan: str = "free",
+    request: Request = None
+):
+    """
+    Public endpoint to generate API key without authentication.
+    """
+    try:
+        # Generate random API key
+        api_key_value = ''.join(secrets.choice(string.ascii_letters + string.digits) for _ in range(32))
+        
+        # Set plan limits
+        plan_limits = {
+            "free": {"daily_limit": 100, "monthly_limit": 3000},
+            "pro": {"daily_limit": 10000, "monthly_limit": 300000},
+            "enterprise": {"daily_limit": -1, "monthly_limit": -1}
+        }
+        
+        if plan not in plan_limits:
+            raise HTTPException(status_code=400, detail="Invalid plan")
+        
+        limits = plan_limits[plan]
+        
+        # Store API key in Redis
+        await cache.set(f"api_key:{api_key_value}:plan", plan)
+        await cache.set(f"api_key:{api_key_value}:daily_limit", limits["daily_limit"])
+        await cache.set(f"api_key:{api_key_value}:monthly_limit", limits["monthly_limit"])
+        await cache.set(f"api_key:{api_key_value}:requests", 0)
+        await cache.set(f"api_key:{api_key_value}:created_at", datetime.utcnow().isoformat())
+        await cache.set(f"api_key:{api_key_value}:active", True)
+        
+        # Add to list of active keys
+        await cache.sadd("active_api_keys", api_key_value)
+        
+        logger.info(f"Generated new API key for plan: {plan}")
+        
+        return {
+            "api_key": api_key_value,
+            "plan": plan,
+            "daily_limit": limits["daily_limit"],
+            "monthly_limit": limits["monthly_limit"],
+            "created_at": datetime.utcnow().isoformat(),
+            "active": True
+        }
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"API key generation error: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to generate API key")
