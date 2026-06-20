@@ -20,6 +20,7 @@ class YouTubeExtractor:
         ]
         self.current_invidious_index = 0
         self.youtube_api_key = os.getenv('YOUTUBE_API_KEY')
+        logger.info(f"YouTube API Key loaded: {bool(self.youtube_api_key)}")
 
     def _get_ydl_options(self, proxy: Optional[str] = None) -> Dict[str, Any]:
         opts = {
