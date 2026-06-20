@@ -55,9 +55,14 @@ class YouTubeExtractor:
 
     async def search_youtube_api(self, query: str, max_results: int = 10) -> List[Dict[str, Any]]:
         """Search using YouTube Data API as fallback"""
-        if not self.youtube_api_key:
+        # Read API key fresh each time to ensure it's loaded
+        youtube_api_key = os.getenv('YOUTUBE_API_KEY')
+        
+        if not youtube_api_key:
             logger.warning("YouTube API key not configured")
             return []
+        
+        logger.info(f"Using YouTube API key (first 10 chars): {youtube_api_key[:10]}...")
         
         try:
             url = f"https://www.googleapis.com/youtube/v3/search"
@@ -66,7 +71,7 @@ class YouTubeExtractor:
                 'q': query,
                 'type': 'video',
                 'maxResults': max_results,
-                'key': self.youtube_api_key
+                'key': youtube_api_key
             }
             
             async with aiohttp.ClientSession() as session:
@@ -89,7 +94,8 @@ class YouTubeExtractor:
                         logger.info(f"YouTube API search successful: {len(entries)} results")
                         return entries
                     else:
-                        logger.warning(f"YouTube API search failed with status: {response.status}")
+                        error_text = await response.text()
+                        logger.warning(f"YouTube API search failed with status: {response.status}, error: {error_text}")
                         return []
         except Exception as e:
             logger.error(f"YouTube API search error: {str(e)}")
