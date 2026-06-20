@@ -4,12 +4,20 @@ from typing import Optional, Dict, List, Any
 from loguru import logger
 from app.config import settings
 import random
+import aiohttp
 
 
 class YouTubeExtractor:
     def __init__(self):
         self.proxy_list = settings.fallback_servers_list if settings.fallback_servers_list else []
         self.current_proxy_index = 0
+        self.invidious_instances = [
+            'https://vid.puffyan.us',
+            'https://invidious.snopyta.org',
+            'https://yewtu.be',
+            'https://invidious.kavin.rocks'
+        ]
+        self.current_invidious_index = 0
 
     def _get_ydl_options(self, proxy: Optional[str] = None) -> Dict[str, Any]:
         opts = {
@@ -32,7 +40,6 @@ class YouTubeExtractor:
             'geo_bypass_ip_block': None,
             'user_agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
             'referer': 'https://www.youtube.com/',
-            'cookiesfrombrowser': 'chrome',
         }
 
         if proxy:
@@ -48,6 +55,43 @@ class YouTubeExtractor:
         proxy = self.proxy_list[self.current_proxy_index]
         self.current_proxy_index = (self.current_proxy_index + 1) % len(self.proxy_list)
         return proxy
+
+    def _rotate_invidious(self) -> str:
+        instance = self.invidious_instances[self.current_invidious_index]
+        self.current_invidious_index = (self.current_invidious_index + 1) % len(self.invidious_instances)
+        return instance
+
+    async def search_invidious(self, query: str, max_results: int = 10) -> List[Dict[str, Any]]:
+        """Search using Invidious API as fallback"""
+        try:
+            instance = self._rotate_invidious()
+            url = f"{instance}/api/v1/search?q={query}&type=video"
+            
+            async with aiohttp.ClientSession() as session:
+                async with session.get(url, timeout=aiohttp.ClientTimeout(total=30)) as response:
+                    if response.status == 200:
+                        data = await response.json()
+                        entries = []
+                        for item in data[:max_results]:
+                            entries.append({
+                                'video_id': item.get('videoId', ''),
+                                'title': item.get('title', ''),
+                                'duration': item.get('lengthSeconds', 0),
+                                'thumbnail': item.get('videoThumbnails', [{}])[0].get('url', '') if item.get('videoThumbnails') else '',
+                                'uploader': item.get('author', ''),
+                                'uploader_id': item.get('authorId', ''),
+                                'view_count': item.get('viewCount', 0),
+                                'upload_date': item.get('published', ''),
+                                'url': f"https://www.youtube.com/watch?v={item.get('videoId', '')}"
+                            })
+                        logger.info(f"Invidious search successful: {len(entries)} results")
+                        return entries
+                    else:
+                        logger.warning(f"Invidious search failed with status: {response.status}")
+                        return []
+        except Exception as e:
+            logger.error(f"Invidious search error: {str(e)}")
+            return []
 
     async def search(self, query: str, max_results: int = 10) -> List[Dict[str, Any]]:
         """Search for videos"""
@@ -65,7 +109,9 @@ class YouTubeExtractor:
                 
                 if not result or 'entries' not in result:
                     logger.warning(f"No results found for query: {query}")
-                    return []
+                    # Fallback to Invidious
+                    logger.info("Falling back to Invidious API")
+                    return await self.search_invidious(query, max_results)
 
                 entries = []
                 for entry in result['entries']:
@@ -86,7 +132,9 @@ class YouTubeExtractor:
 
         except Exception as e:
             logger.error(f"Search error: {str(e)}")
-            return []
+            # Fallback to Invidious
+            logger.info("Falling back to Invidious API due to error")
+            return await self.search_invidious(query, max_results)
 
     async def get_video_info(self, video_id: str) -> Optional[Dict[str, Any]]:
         """Get detailed video information"""
@@ -274,7 +322,9 @@ class YouTubeExtractor:
                 
                 if not info or 'entries' not in info:
                     logger.warning(f"No trending videos found")
-                    return []
+                    # Fallback to Invidious
+                    logger.info("Falling back to Invidious API for trending")
+                    return await self.search_invidious("trending music", 20)
 
                 entries = []
                 for entry in info['entries'][:20]:  # Limit to 20 results
@@ -294,7 +344,9 @@ class YouTubeExtractor:
 
         except Exception as e:
             logger.error(f"Trending error: {str(e)}")
-            return []
+            # Fallback to Invidious
+            logger.info("Falling back to Invidious API for trending due to error")
+            return await self.search_invidious("trending music", 20)
 
     async def get_related(self, video_id: str) -> List[Dict[str, Any]]:
         """Get related videos"""
