@@ -8,8 +8,6 @@ services:
     envVars:
       - key: API_HOST
         value: 0.0.0.0
-      - key: API_PORT
-        value: 8000
       - key: ENVIRONMENT
         value: production
       - key: REDIS_HOST

@@ -1,13 +1,24 @@
 from pydantic_settings import BaseSettings
+from pydantic import field_validator
 from typing import List, Optional
 
 
 class Settings(BaseSettings):
     # API Configuration
     API_HOST: str = "0.0.0.0"
-    API_PORT: int = 8000
+    API_PORT: str = "8000"
     API_KEY_SECRET: str = "your-secret-key-change-this"
     ENVIRONMENT: str = "development"
+
+    @field_validator('API_PORT', mode='before')
+    @classmethod
+    def parse_port(cls, v):
+        if isinstance(v, str):
+            try:
+                return str(int(v))
+            except ValueError:
+                return "8000"
+        return str(v)
 
     # Redis Configuration
     REDIS_HOST: str = "localhost"
