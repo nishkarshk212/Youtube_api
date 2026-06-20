@@ -12,10 +12,10 @@ class YouTubeExtractor:
         self.proxy_list = settings.fallback_servers_list if settings.fallback_servers_list else []
         self.current_proxy_index = 0
         self.invidious_instances = [
-            'https://vid.puffyan.us',
-            'https://invidious.snopyta.org',
-            'https://yewtu.be',
-            'https://invidious.kavin.rocks'
+            'https://invidious.fdn.fr',
+            'https://inv.riverside.rocks',
+            'https://invidious.osi.kr',
+            'https://invidious.namazso.eu'
         ]
         self.current_invidious_index = 0
 
