@@ -1,4 +1,4 @@
-FROM python:3.11-slim
+FROM python:3.11
 
 WORKDIR /app
 
@@ -9,6 +9,7 @@ RUN apt-get update && apt-get install -y \
     wget \
     gnupg \
     ca-certificates \
+    openssl \
     && update-ca-certificates \
     && rm -rf /var/lib/apt/lists/*
 
