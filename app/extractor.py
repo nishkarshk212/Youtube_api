@@ -21,7 +21,18 @@ class YouTubeExtractor:
             'nocheckcertificate': True,
             'default_search': 'ytsearch',
             'source_address': '0.0.0.0',
-            'socket_timeout': 30,
+            'socket_timeout': 60,
+            'retries': 3,
+            'fragment_retries': 3,
+            'file_access_retries': 3,
+            'extractor_retries': 3,
+            'age_limit': None,
+            'geo_bypass': True,
+            'geo_bypass_country': None,
+            'geo_bypass_ip_block': None,
+            'user_agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+            'referer': 'https://www.youtube.com/',
+            'cookiesfrombrowser': 'chrome',
         }
 
         if proxy:
@@ -45,10 +56,15 @@ class YouTubeExtractor:
             opts['extract_flat'] = True
             opts['playlistend'] = max_results
 
+            logger.info(f"Searching for: {query}")
+            
             with yt_dlp.YoutubeDL(opts) as ydl:
                 result = ydl.extract_info(f"ytsearch{max_results}:{query}", download=False)
                 
+                logger.info(f"Search result: {result}")
+                
                 if not result or 'entries' not in result:
+                    logger.warning(f"No results found for query: {query}")
                     return []
 
                 entries = []
@@ -246,16 +262,22 @@ class YouTubeExtractor:
         """Get trending videos"""
         try:
             opts = self._get_ydl_options()
+            # Use a simpler trending URL that's more likely to work
             url = f"https://www.youtube.com/feed/trending?bp=6gQJRkFleBIoX"
 
+            logger.info(f"Fetching trending videos for category: {category}")
+            
             with yt_dlp.YoutubeDL(opts) as ydl:
                 info = ydl.extract_info(url, download=False)
                 
+                logger.info(f"Trending result: {info}")
+                
                 if not info or 'entries' not in info:
+                    logger.warning(f"No trending videos found")
                     return []
 
                 entries = []
-                for entry in info['entries'][:20]:
+                for entry in info['entries'][:20]:  # Limit to 20 results
                     if entry:
                         entries.append({
                             'video_id': entry.get('id', ''),
