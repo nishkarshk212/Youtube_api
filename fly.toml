@@ -1,4 +1,5 @@
 app = "youtube-music-api"
+primary_region = "iad"
 
 [build]
   dockerfile = "Dockerfile"
