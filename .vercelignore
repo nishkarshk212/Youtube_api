@@ -1,0 +1,13 @@
+# Ignore files for Vercel deployment
+.env
+.env.local
+.env.*.local
+.git
+.gitignore
+Dockerfile
+docker-compose.yml
+render.yaml
+deploy.sh
+DEPLOYMENT.md
+app/
+requirements.txt
