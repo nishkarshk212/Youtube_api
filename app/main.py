@@ -1,3 +1,5 @@
+import ssl
+import urllib3
 from fastapi import FastAPI, HTTPException, Request, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
@@ -8,6 +10,10 @@ from contextlib import asynccontextmanager
 from datetime import datetime
 from loguru import logger
 import time
+
+# Disable SSL verification globally
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+ssl._create_default_https_context = ssl._create_unverified_context
 
 from app.config import settings
 from app.cache import cache
